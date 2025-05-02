@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   web:
@@ -8,16 +7,18 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./backend:/var/www/html/backend
-      - ./frontend:/var/www/html/frontend
-      - ./frontend/public:/var/www/html/public
-      - ./frontend/public/css:/var/www/html/public/css
-      - ./frontend/public/js:/var/www/html/public/js
+      - ./backend:/var/www/html/backend       # Бэкенд
+      - ./backend/public:/var/www/html/public # Публичная папка
+      - ./frontend/public:/var/www/html/frontend  # Если фронтенд нужен
+    user: "1000:www-data"
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
     depends_on:
       - db
     networks:
       - app-network
-
+    
   db:
     image: mysql:8.0
     environment:
@@ -26,36 +27,15 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
-      - db_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql  # Используем именованный том
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "3306:3306"  # Изменили на стандартный порт
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PMA_HOST: db  # Используем имя сервиса, а не localhost
-      PMA_PORT: 3306  # Внутренний порт контейнера MySQL
-      PMA_USER: root
-      PMA_PASSWORD: rootpassword
-      PMA_ARBITRARY: 0
-    ports:
-      - "8081:80"
+      - "3306:3306"
     networks:
       - app-network
 
 volumes:
-  db_data:
+  mysql_data:  # Объявляем именованный том
 
 networks:
   app-network:
