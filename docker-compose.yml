@@ -11,6 +11,8 @@ services:
       - ./backend:/var/www/html/backend
       - ./frontend:/var/www/html/frontend
       - ./frontend/public:/var/www/html/public
+      - ./frontend/public/css:/var/www/html/public/css
+      - ./frontend/public/js:/var/www/html/public/js
     depends_on:
       - db
     networks:

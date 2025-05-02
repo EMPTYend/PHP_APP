@@ -1,8 +1,22 @@
 <?php
-require_once __DIR__ . '/../../../backend/app.php';
+// Абсолютный путь к app.php
+$appPath = '/var/www/html/backend/app.php';
 
-// Если запрос не API, отображаем HTML
-if (strpos($_SERVER['REQUEST_URI'], '/api/') === false) {
+// Проверка существования файла
+if (!file_exists($appPath)) {
+    header('Content-Type: text/html; charset=utf-8');
+    die("<h1>Ошибка конфигурации</h1>
+        <p>Файл backend не найден по пути: $appPath</p>
+        <p>Проверьте настройки Docker volumes</p>");
+}
+
+// Подключаем backend
+require_once $appPath;
+
+// Если это API-запрос - завершаем выполнение
+if (strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
+    return;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -49,6 +63,3 @@ if (strpos($_SERVER['REQUEST_URI'], '/api/') === false) {
     <script src="/js/app.js"></script>
 </body>
 </html>
-<?php
-}
-?>
