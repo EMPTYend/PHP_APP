@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Веб-сервер Apache с PHP
+  web:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www/html/backend
+      - ./frontend:/var/www/html/frontend
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # База данных MySQL
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: myapp
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - app-network
+
+  # PHPMyAdmin (опционально)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3307
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8081:80"
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge
