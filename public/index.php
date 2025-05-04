@@ -10,7 +10,7 @@ require_once __DIR__ . '/../app/Core/View.php';
 
 
 // Получаем подключение к БД
-$pdo = \Core\Database::connect();
+$pdo = \app\Core\Database::connect();
 
 // Инициализация моделей (исправлен namespace)
 $userModel = new \app\Models\User($pdo);

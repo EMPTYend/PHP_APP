@@ -106,20 +106,33 @@ class User
     }
 
     /**
-     * Проверка существования email
+     * Проверка существования email (обновленная версия с исключением текущего пользователя)
      */
-    public function emailExists(string $email): bool
+    public function emailExists(string $email, ?int $excludeUserId = null): bool
     {
-        $stmt = $this->pdo->prepare("SELECT 1 FROM user WHERE email = :email LIMIT 1");
-        $stmt->execute([':email' => filter_var($email, FILTER_SANITIZE_EMAIL)]);
+        $query = "SELECT 1 FROM user WHERE email = :email";
+        $params = [':email' => filter_var($email, FILTER_SANITIZE_EMAIL)];
+        
+        if ($excludeUserId) {
+            $query .= " AND id_user != :exclude_id";
+            $params[':exclude_id'] = $excludeUserId;
+        }
+        
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return (bool)$stmt->fetchColumn();
     }
 
     /**
-     * Обновление данных пользователя
+     * Обновление данных пользователя (объединенная версия)
      */
     public function updateProfile(int $id, array $data): bool
     {
+        // Валидация email
+        if (isset($data['email']) && $this->emailExists($data['email'], $id)) {
+            throw new InvalidArgumentException('Email уже используется другим пользователем');
+        }
+
         $allowedFields = ['name', 'phone', 'email'];
         $updates = [];
         $params = [':id' => $id];
