@@ -2,6 +2,8 @@
 
 namespace app\Controllers;
 
+use app\Core\View;
+
 class RoomController
 {
     public function index()
@@ -16,7 +18,11 @@ class RoomController
 
     public function home()
     {
-        echo "Welcome to the Home Page!";
+        
+        View::render('home', [
+            'title' => 'Home Page',
+            'rooms' => $rooms
+        ]);
     }
 
     public function getAllRooms()

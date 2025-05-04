@@ -13,7 +13,8 @@ if (!isset($router)) {
 
 $router->get('/', [RoomController::class, 'index']);
 $router->get('/home', [RoomController::class, 'home']);
-$router->get('/room', [RoomController::class, 'getAllRooms']);
+$router->get('/rooms', [\app\Controllers\RoomController::class, 'rooms']);
+
 
 $router->post('/room/search', [RoomController::class, 'search']);
 
