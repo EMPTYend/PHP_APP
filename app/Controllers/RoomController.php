@@ -18,4 +18,10 @@ class RoomController
     {
         echo "Welcome to the Home Page!";
     }
+
+    public function getAllRooms()
+    {
+        // Здесь будет логика получения всех комнат
+        echo "All rooms data!";
+    }
 }
