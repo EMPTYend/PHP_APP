@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Сервис для веб-приложения (PHP + Apache)
   web:
     build:
       context: .
@@ -13,8 +12,12 @@ services:
       - .:/var/www/html
     depends_on:
       - db
+    environment:
+      DB_HOST: db  # Используем имя сервиса вместо IP
+      DB_USER: user
+      DB_PASS: root
+      DB_NAME: hotel_db
 
-  # Сервис для базы данных (MySQL)
   db:
     image: mysql:8.0
     container_name: mysql-db
@@ -23,12 +26,18 @@ services:
       MYSQL_DATABASE: hotel_db
       MYSQL_USER: user
       MYSQL_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'  # Разрешаем root доступ с любого хоста
+    command: --default-authentication-plugin=mysql_native_password  # Важно для MySQL 8+
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      interval: 10s
+      retries: 10
 
-  # Сервис для phpMyAdmin для удобного управления базой данных
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -37,8 +46,10 @@ services:
     environment:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      db:
+        condition: service_healthy
 
-# Объявляем volume для хранения данных MySQL
 volumes:
   mysql_data:
     driver: local
