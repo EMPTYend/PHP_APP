@@ -11,7 +11,7 @@ class Model
     public static function db()
     {
         if (!self::$db) {
-            $config = require __DIR__ . '/../../config/database.php';
+            $config = require __DIR__ . '/../Config/db.php';
             self::$db = new PDO(
                 "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8",
                 $config['user'],
