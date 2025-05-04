@@ -2,26 +2,22 @@
 // public/index.php
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../app/Core/Database.php';  // Подключаем класс Database
 require_once __DIR__ . '/../app/Core/Router.php';
 require_once __DIR__ . '/../app/Controllers/RoomController.php';
-require_once __DIR__ . '/../app/Config/db.php';
 require_once __DIR__ . '/../app/Models/User.php';
 
-$pdo = new PDO(...); // из db.php
-$userModel = new User($pdo);
+// Получаем подключение к БД через Singleton
+$pdo = \Core\Database::connect();
 
-use app\Core\Router;
+// Инициализация моделей
+$userModel = new app\Models\User($pdo);
 
-$router = new Router();  // Создаем объект маршрутизатора
+// Создание и настройка маршрутизатора
+$router = new app\Core\Router();
 
-require_once __DIR__ . '/../routes/web.php';  // Подключаем маршруты
+// Подключаем маршруты
+require_once __DIR__ . '/../routes/web.php';
 
-// Регистрируем маршруты
-$router->get('/', [app\Controllers\RoomController::class, 'index']);
-$router->post('/room/search', [app\Controllers\RoomController::class, 'search']);
-
-
-
-// Отправляем запрос на обработку
-
-$router->dispatch($_SERVER['REQUEST_URI']);
+// Обрабатываем запрос
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
