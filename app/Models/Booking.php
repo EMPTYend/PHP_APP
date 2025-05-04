@@ -29,4 +29,14 @@ class Booking
             return [];
         }
     }
+
+    public static function getStatusText(string $status): string
+    {
+        return match($status) {
+            'pending' => 'Ожидание',
+            'confirmed' => 'Подтверждено',
+            'cancelled' => 'Отменено',
+            default => $status
+        };
+    }
 }
