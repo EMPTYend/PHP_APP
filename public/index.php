@@ -4,7 +4,11 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/Core/Router.php';
 require_once __DIR__ . '/../app/Controllers/RoomController.php';
+require_once __DIR__ . '/../app/Config/db.php';
+require_once __DIR__ . '/../app/Models/User.php';
 
+$pdo = new PDO(...); // из db.php
+$userModel = new User($pdo);
 
 use app\Core\Router;
 
