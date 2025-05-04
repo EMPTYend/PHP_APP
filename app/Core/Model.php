@@ -3,30 +3,44 @@
 namespace Core;
 
 use PDO;
+use PDOException;
 
-class Model
+abstract class Model
 {
     protected static $db;
+    protected static string $table; // Теперь свойство определено
 
-    public static function db()
+    public static function db(): PDO
     {
         if (!self::$db) {
             $config = require __DIR__ . '/../Config/db.php';
-            self::$db = new PDO(
-                "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8",
-                $config['user'],
-                $config['pass']
-            );
-            self::$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            try {
+                self::$db = new PDO(
+                    "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4",
+                    $config['user'],
+                    $config['pass'],
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false
+                    ]
+                );
+            } catch (PDOException $e) {
+                throw new \RuntimeException("Database connection failed: " . $e->getMessage());
+            }
         }
 
         return self::$db;
     }
 
-    public static function all()
+    public static function all(): array
     {
-        $table = static::$table;
-        $stmt = self::db()->query("SELECT * FROM $table");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!isset(static::$table)) {
+            throw new \LogicException('Table name not defined in model');
+        }
+
+        $stmt = self::db()->query("SELECT * FROM " . static::$table);
+        return $stmt->fetchAll();
     }
 }

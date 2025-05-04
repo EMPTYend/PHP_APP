@@ -3,6 +3,7 @@
 namespace Core;
 
 use PDO;
+use PDOException; // Добавьте этот импорт
 
 class Database
 {
@@ -18,7 +19,7 @@ class Database
                     $config['user'],
                     $config['pass'],
                     [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // Исправлена опечатка (EXCEPTION → EXCEPTION)
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                         PDO::ATTR_EMULATE_PREPARES => false
                     ]

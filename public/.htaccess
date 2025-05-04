@@ -1,11 +1,9 @@
 <IfModule mod_rewrite.c>
+    Options -Indexes +FollowSymLinks
     RewriteEngine On
     RewriteBase /
-
-    # Если запрашиваемый файл или папка существует — отдать его напрямую
+    
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-
-    # Иначе перенаправить всё на index.php
-    RewriteRule ^ index.php [QSA,L]
+    RewriteRule ^ index.php [L]
 </IfModule>
