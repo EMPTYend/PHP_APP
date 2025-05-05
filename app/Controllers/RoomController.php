@@ -6,11 +6,7 @@ use app\Core\View;
 
 class RoomController
 {
-    public function index()
-    {
-        echo "Welcome to the Room Index!";
-    }
-
+    
     public function search()
     {
         echo "Room Search Results!";
