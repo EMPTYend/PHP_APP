@@ -28,10 +28,8 @@ class RoomController
     {
         // Здесь будет логика получения всех комнат
         // Например, обращение к модели Room
-        return [
-            ['id' => 1, 'name' => 'Deluxe Room'],
-            ['id' => 2, 'name' => 'Standard Room']
-        ];
+        $roomModel = new \app\Models\Room();
+        return $roomModel->getAll();
     }
 
     
