@@ -8,8 +8,7 @@ if (!isset($router)) {
 }
 
 // Основные маршруты
-$router->get('/', ['app\Controllers\RoomController', 'index']);
-$router->get('/home', ['app\Controllers\RoomController', 'home']);
+$router->get('/', ['app\Controllers\RoomController', 'home']);
 $router->get('/rooms', ['app\Controllers\RoomController', 'rooms']);
 $router->post('/room/search', ['app\Controllers\RoomController', 'search']);
 
