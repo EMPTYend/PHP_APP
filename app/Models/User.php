@@ -3,17 +3,11 @@
 namespace app\Models;
 
 use app\Core\Model;
+use PDO;
 
 class User extends Model
 {
     protected static string $table = 'user';
-
-    public static function findByEmail(string $email): ?array
-    {
-        $stmt = self::db()->prepare("SELECT * FROM user WHERE email = :email");
-        $stmt->execute(['email' => $email]);
-        return $stmt->fetch() ?: null;
-    }
 
     public static function create(array $data): bool
     {
@@ -29,5 +23,12 @@ class User extends Model
             'password' => $data['password'],
             'role' => $data['role'] ?? 'user'
         ]);
+    }
+
+    public static function findByEmail(string $email): ?array
+    {
+        $stmt = self::db()->prepare("SELECT * FROM user WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 }

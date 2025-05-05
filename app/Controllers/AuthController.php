@@ -5,12 +5,17 @@ namespace app\Controllers;
 use app\Core\Controller;
 use app\Core\View;
 use app\Models\User;
+use Exception; 
 
 class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        View::render('auth/login', ['title' => 'Login']);
+        View::render('auth/login', [
+            'title' => 'Login',
+            'error' => $_SESSION['error'] ?? null
+        ]);
+        unset($_SESSION['error']);
     }
 
     public function login()
@@ -18,20 +23,22 @@ class AuthController extends Controller
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        $user = User::findByEmail($email);
-
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user'] = $user;
-            $_SESSION['is_authenticated'] = true;
+        try {
+            $user = User::findByEmail($email);
             
-            header('Location: /home');
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user'] = $user;
+                $_SESSION['is_authenticated'] = true;
+                header('Location: /account');
+                exit();
+            }
+            
+            throw new Exception('Invalid credentials');
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /login');
             exit();
         }
-
-        View::render('auth/login', [
-            'title' => 'Login',
-            'error' => 'Invalid credentials'
-        ]);
     }
 
     public function showRegistrationForm()
@@ -40,53 +47,40 @@ class AuthController extends Controller
     }
 
     public function register()
-    {
-        $name = $_POST['name'] ?? '';
-        $phone = $_POST['phone'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
-
-        // Валидация
-        $errors = [];
-        if (empty($name)) $errors['name'] = 'Name is required';
-        if (empty($phone)) $errors['phone'] = 'Phone is required';
-        if (empty($email)) $errors['email'] = 'Email is required';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Invalid email format';
-        if (empty($password)) $errors['password'] = 'Password is required';
-        if ($password !== $confirmPassword) $errors['confirm_password'] = 'Passwords do not match';
-
-        if (User::findByEmail($email)) {
-            $errors['email'] = 'Email already exists';
-        }
-
-        if (!empty($errors)) {
-            View::render('auth/register', [
-                'title' => 'Register',
-                'errors' => $errors,
-                'old' => $_POST
-            ]);
-            return;
-        }
-
-        // Создание пользователя
-        $userData = [
+{
+    // Получаем данные из формы
+    $name = $_POST['name'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    
+    // Хешируем пароль
+    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+    
+    // Пробуем сохранить пользователя
+    try {
+        $result = User::create([
             'name' => $name,
             'phone' => $phone,
             'email' => $email,
-            'password' => password_hash($password, PASSWORD_BCRYPT),
-            'role' => 'user'
-        ];
-
-        User::create($userData);
-
-        // Автоматический вход после регистрации
-        $_SESSION['user'] = User::findByEmail($email);
-        $_SESSION['is_authenticated'] = true;
-
-        header('Location: /home');
+            'password' => $hashedPassword
+        ]);
+        
+        if ($result) {
+            $_SESSION['user'] = User::findByEmail($email);
+            header('Location: /account');
+            exit();
+        } else {
+            throw new Exception('Ошибка при сохранении пользователя');
+        }
+    } catch (Exception $e) {
+        // Логируем ошибку и показываем пользователю
+        error_log($e->getMessage());
+        $_SESSION['error'] = 'Ошибка регистрации: ' . $e->getMessage();
+        header('Location: /register');
         exit();
     }
+}
 
     public function logout()
     {

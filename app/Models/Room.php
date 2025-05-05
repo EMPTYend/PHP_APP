@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Core\Model;
+use app\Core\Model;
 
 class Room extends Model
 {

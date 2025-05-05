@@ -24,3 +24,20 @@ $router->get('/logout', ['app\Controllers\AuthController', 'logout']);
 $router->get('/account', ['app\Controllers\AccountController', 'dashboard']);
 $router->get('/account/edit', ['app\Controllers\AccountController', 'editProfile']);
 $router->post('/account/update', ['app\Controllers\AccountController', 'updateProfile']);
+
+$router->get('/test-db', function() {
+    try {
+        $user = app\Models\User::findByEmail('admin@hotel.com');
+        echo '<pre>';
+        print_r($user);
+        echo '</pre>';
+    } catch (Exception $e) {
+        echo 'DB Error: ' . $e->getMessage();
+    }
+});
+
+$router->get('/test-session', function() {
+    echo '<pre>';
+    print_r($_SESSION);
+    echo '</pre>';
+});
