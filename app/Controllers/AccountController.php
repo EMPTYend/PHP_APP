@@ -22,10 +22,12 @@ class AccountController extends Controller
 
     private function checkAuthentication(): void
     {
-        if (!isset($_SESSION['user_id'])) {
+        if (empty($_SESSION['user_id'])) {
+            $_SESSION['login_redirect'] = $_SERVER['REQUEST_URI'];
             $this->redirect('/login');
         }
     }
+
 
     public function index()
     {

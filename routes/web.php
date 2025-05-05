@@ -1,27 +1,31 @@
 <?php
 
-require_once __DIR__ . '/../app/Controllers/RoomController.php';
-
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use app\Controllers\RoomController;
-use app\Controllers\AccountController; // <-- добавляем импорт класса AccountController
-use app\Core\Router;    // <-- добавляем импорт класса Router
+use app\Controllers\AccountController;
+use app\Controllers\AuthController;
+use app\Core\Router;
 
-// перед вызовом нужно убедиться, что $router уже существует
 if (!isset($router)) {
     die('Router not initialized.');
 }
 
-$router->get('/', [RoomController::class, 'index']);
-$router->get('/home', [RoomController::class, 'home']);
-$router->get('/rooms', [RoomController::class, 'rooms']);
+// Основные маршруты
+$router->get('/', ['app\Controllers\RoomController', 'index']);
+$router->get('/home', ['app\Controllers\RoomController', 'home']);
+$router->get('/rooms', ['app\Controllers\RoomController', 'rooms']);
+$router->post('/room/search', ['app\Controllers\RoomController', 'search']);
 
+// Маршруты аутентификации
+$router->get('/login', ['app\Controllers\AuthController', 'login']);
+$router->post('/login', ['app\Controllers\AuthController', 'authenticate']);
+$router->get('/logout', ['app\Controllers\AuthController', 'logout']);
 
-$router->post('/room/search', [RoomController::class, 'search']);
-
-$router->get('/account', [AccountController::class, 'index']);
-$router->get('/account/profile', [AccountController::class, 'profile']);
-$router->post('/account/update-profile', [AccountController::class, 'updateProfile']);
-$router->get('/account/bookings', [AccountController::class, 'bookings']);
-$router->get('/account/security', [AccountController::class, 'security']);
-$router->post('/account/change-password', [AccountController::class, 'changePassword']);
+// Маршруты аккаунта
+$router->get('/account', ['app\Controllers\AccountController', 'index']);
+$router->get('/account/profile', ['app\Controllers\AccountController', 'profile']);
+$router->post('/account/update-profile', ['app\Controllers\AccountController', 'updateProfile']);
+$router->get('/account/bookings', ['app\Controllers\AccountController', 'bookings']);
+$router->get('/account/security', ['app\Controllers\AccountController', 'security']);
+$router->post('/account/change-password', ['app\Controllers\AccountController', 'changePassword']);

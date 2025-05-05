@@ -106,7 +106,7 @@ class User
     }
 
     /**
-     * Проверка существования email (обновленная версия с исключением текущего пользователя)
+     * Проверка существования email (с возможностью исключения пользователя)
      */
     public function emailExists(string $email, ?int $excludeUserId = null): bool
     {
@@ -124,7 +124,7 @@ class User
     }
 
     /**
-     * Обновление данных пользователя (объединенная версия)
+     * Обновление данных пользователя
      */
     public function updateProfile(int $id, array $data): bool
     {
