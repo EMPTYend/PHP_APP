@@ -17,24 +17,16 @@ class RoomController
     }
 
     public function home()
-    {
-        // Инициализируем переменную перед использованием
-        $rooms = []; // Пустой массив или данные из модели
-        
-        // Пример с mock-данными:
-        $rooms = [
-            ['id' => 1, 'name' => 'Deluxe Room'],
-            ['id' => 2, 'name' => 'Standard Room']
-        ];
-        
-        // Или получаем данные из модели:
-        // $rooms = $this->getAllRooms();
-        
-        View::render('home', [
-            'title' => 'Home Page',
-            'rooms' => $rooms // Теперь переменная определена
-        ]);
-    }
+{
+    // Получаем комнаты (без проверки аутентификации)
+    $rooms = $this->getAllRooms();
+    
+    View::render('home', [
+        'title' => 'Home Page',
+        'rooms' => $rooms,
+        'user' => $_SESSION['user'] ?? null // Передаем пользователя, если он авторизован
+    ]);
+}
 
     public function getAllRooms()
     {

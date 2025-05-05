@@ -1,3 +1,27 @@
+<?php if (isset($_SESSION['is_authenticated']) && $_SESSION['is_authenticated']): ?>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+            <?= htmlspecialchars($_SESSION['user']['name']) ?>
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+        </ul>
+    </li>
+<?php else: ?>
+    <li class="nav-item">
+        <a class="nav-link" href="/account">Личный кабинет</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/logout">Выход</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/login">Вход</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/register">Регистрация</a>
+    </li>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
