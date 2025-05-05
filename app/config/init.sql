@@ -62,3 +62,33 @@ CREATE TABLE IF NOT EXISTS query (
 -- Создание администратора по умолчанию (пароль: Admin123)
 INSERT IGNORE INTO user (name, phone, email, password, role) 
 VALUES ('Admin', '+1234567890', 'admin@hotel.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+
+-- Делюкс номер (люкс)
+INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)
+VALUES ('Deluxe', 2, 1, 'King Size', 150.00, 
+'Просторный номер с панорамным видом, гидромассажной ванной и отдельной гостиной зоной. Включен завтрак "шведский стол".',
+1, NOW(), NOW());
+
+-- Стандартный двухместный номер
+INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)
+VALUES ('Standard Double', 2, 1, 'Queen Size', 90.00, 
+'Уютный номер с современной мебелью, мини-баром и кофемашиной. Ежедневная уборка и смена белья.',
+2, NOW(), NOW());
+
+-- Семейный номер
+INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)
+VALUES ('Family', 4, 2, '2 Queen Size', 180.00, 
+'Просторный семейный номер с двумя спальнями и детской зоной. Идеально подходит для семейного отдыха.',
+3, NOW(), NOW());
+
+-- Эконом номер
+INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)
+VALUES ('Economy', 1, 1, 'Single', 50.00, 
+'Компактный номер с односпальной кроватью для комфортного проживания одного гостя. Все необходимое для короткого пребывания.',
+4, NOW(), NOW());
+
+-- Президентский люкс
+INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)
+VALUES ('Presidential Suite', 2, 3, 'King Size', 350.00, 
+'Роскошный апартамент с отдельной спальней, гостиной, столовой зоной и кабинетом. Персональный дворецкий и VIP-услуги.',
+5, NOW(), NOW());

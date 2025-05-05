@@ -9,12 +9,6 @@
     </li>
 <?php else: ?>
     <li class="nav-item">
-        <a class="nav-link" href="/account">Личный кабинет</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/logout">Выход</a>
-    </li>
-    <li class="nav-item">
         <a class="nav-link" href="/login">Вход</a>
     </li>
     <li class="nav-item">
