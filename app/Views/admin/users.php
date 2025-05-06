@@ -35,7 +35,7 @@
                         <a href="/admin/users/edit?id=<?= $user['id_user'] ?>" 
                            class="btn btn-sm btn-primary" 
                            title="Редактировать">
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit"></i> Редактировать
                         </a>
                         
                         <form action="/admin/users/delete" method="post" class="d-inline">
@@ -45,7 +45,7 @@
                                     class="btn btn-sm btn-danger" 
                                     title="Удалить"
                                     onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?')">
-                                <i class="fas fa-trash-alt"></i>
+                                <i class="fas fa-trash-alt"></i> Анигилировать
                             </button>
                         </form>
                     </td>

@@ -12,6 +12,7 @@
     
     <form method="POST" action="/admin/users/update?id=<?= $user['id_user'] ?>">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+        <input type="hidden" name="id" value="<?= htmlspecialchars($data['user']['id_user']) ?>">
 
         <div class="mb-3">
             <label for="name" class="form-label">Имя</label>
