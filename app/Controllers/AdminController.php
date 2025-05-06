@@ -136,4 +136,58 @@ class AdminController extends Controller
         header('Location: /admin/users');
         exit();
     }
+
+    public function createRoomForm()
+    {
+        View::render('admin/create_room', [
+            'title' => 'Создание новой комнаты'
+        ]);
+    }
+
+    public function createRoom()
+    {
+        session_start();
+
+        // CSRF Protection
+        if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+            $_SESSION['error'] = "Недействительный CSRF-токен";
+            header('Location: /admin/rooms/create');
+            exit();
+        }
+
+        // Валидация обязательных полей
+        $required = ['name', 'capacity', 'price'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                $_SESSION['error'] = "Поле " . ucfirst($field) . " обязательно для заполнения";
+                header('Location: /admin/rooms/create');
+                exit();
+            }
+        }
+
+        // Санитизация данных
+        $data = [
+            'name' => htmlspecialchars(trim($_POST['name'])),
+            'capacity' => (int) $_POST['capacity'],
+            'price' => (float) $_POST['price'],
+            'description' => htmlspecialchars(trim($_POST['description'] ?? ''))
+        ];
+
+        // Проверка корректности данных
+        if ($data['capacity'] <= 0 || $data['price'] <= 0) {
+            $_SESSION['error'] = "Некорректные данные для вместимости или цены";
+            header('Location: /admin/rooms/create');
+            exit();
+        }
+
+        // Создание новой комнаты
+        if (Room::create($data)) {
+            $_SESSION['success'] = "Комната успешно создана";
+        } else {
+            $_SESSION['error'] = "Ошибка при создании комнаты";
+        }
+
+        header('Location: /admin/rooms');
+        exit();
+    }
 }
