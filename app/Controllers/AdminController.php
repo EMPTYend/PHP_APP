@@ -5,6 +5,7 @@ namespace app\Controllers;
 use app\Core\Controller;
 use app\Core\View;
 use app\Models\User;
+use app\Models\Room;
 use app\Core\Middleware\AuthMiddleware;
 
 class AdminController extends Controller
