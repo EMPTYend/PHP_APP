@@ -47,6 +47,12 @@
                                     <li><a class="dropdown-item" href="/account">Личный кабинет</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/logout">Выход</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                    <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
+                                            <a class="nav-link" href="/admin/users">| Управление аккаунтами |</a>
+                                    <?php endif; ?>
+                                    </li>
                                 </ul>
                             </li>
                         <?php else: ?>

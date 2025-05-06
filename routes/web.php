@@ -24,8 +24,9 @@ $router->get('/account', ['app\Controllers\AccountController', 'dashboard']);
 $router->get('/account/edit', ['app\Controllers\AccountController', 'editProfile']);
 $router->post('/account/update', ['app\Controllers\AccountController', 'updateProfile']);
 
-$router->get('/users/edit/([^/]+)', ['app\Controllers\AdminController', 'editUserForm']); 
-$router->post('/users/update/([^/]+)', ['app\Controllers\AdminController', 'updateUser']);
+$router->get('/admin/users', ['app\Controllers\AdminController', 'userManagement']);
+$router->get('/admin/users/edit/(\d+)', ['app\Controllers\AdminController', 'editUserForm']);
+$router->post('/admin/users/update/(\d+)', ['app\Controllers\AdminController', 'updateUser']);
 
 $router->get('/test-db', function() {
     try {

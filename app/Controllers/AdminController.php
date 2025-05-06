@@ -10,10 +10,15 @@ use app\Core\AuthMiddleware;
 class AdminController extends Controller
 {
     public function __construct()
-    {
-        AuthMiddleware::handle();
-        $this->checkAdmin();
+{
+    AuthMiddleware::handle();
+    
+    if ($_SESSION['user']['role'] !== 'admin') {
+        $_SESSION['error'] = "Доступ запрещён";
+        header('Location: /account');
+        exit();
     }
+}
 
     private function checkAdmin()
     {
