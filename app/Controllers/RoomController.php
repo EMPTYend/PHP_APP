@@ -27,7 +27,7 @@ class RoomController
 public function getAllRooms()
 {
     $db = new \app\Core\Database();
-    $query = "SELECT id_room, type FROM rooms"; // SQL-запрос для получения данных
+    $query = "SELECT id_room, type, description, id_pictures, price, created_at FROM rooms"; // SQL-запрос для получения данных
     return $db->query($query); // Возвращаем массив данных
 }
 

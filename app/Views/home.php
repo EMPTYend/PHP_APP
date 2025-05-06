@@ -6,8 +6,11 @@
         <h1 class="fw-light">Album example</h1>
         <p class="lead text-body-secondary">Something short and leading about the collection below—its contents, the creator, etc. Make it short and sweet, but not too short so folks don’t simply skip over it entirely.</p>
         <p>
-          <a href="#" class="btn btn-primary my-2">Main call to action</a>
-          <a href="#" class="btn btn-secondary my-2">Secondary action</a>
+          <a href="#" class="btn btn-primary my-2">Contact us</a>
+          <form class="d-flex" role="search"> 
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"> 
+            <button class="btn btn-outline-success" type="submit">Search</button> 
+          </form>
         </p>
       </div>
     </div>
@@ -21,15 +24,20 @@
         <?php foreach ($rooms as $room): ?>
           <div class="card shadow-sm mb-4">
             <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
-              <title><?= htmlspecialchars($room['id_pictures']) ?></title>
+              <title><?= htmlspecialchars($room['type']) ?></title>
               <rect width="100%" height="100%" fill="#55595c"></rect>
-              <text x="50%" y="50%" fill="#eceeef" dy=".3em"><?= htmlspecialchars($room['description']) ?></text>
+                <image href="<?= htmlspecialchars($room['id_pictures']) ?>" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" />
+
             </svg>
             <div class="card-body">
+              <p class="card-text"><?= htmlspecialchars($room['type']) ?></p>
               <p class="card-text"><?= htmlspecialchars($room['description']) ?></p>
+              <p class="card-text"><?= htmlspecialchars($room['price']) ?></p>
+              
+
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                    <a href="/room?id=<?= htmlspecialchars($room['id_room']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
                   <button type="button" class="btn btn-sm btn-outline-secondary">Contact</button>
                 </div>
                 <small class="text-body-secondary"><?= date('H:i', strtotime($room['created_at'])) ?></small>
