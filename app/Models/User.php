@@ -29,8 +29,10 @@ class User extends Model
     {
         $stmt = self::db()->prepare("SELECT * FROM user WHERE id_user = ?");
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $user ?: null;
     }
+
 
     public static function findByEmail(string $email): ?array
     {
