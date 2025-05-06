@@ -24,15 +24,12 @@ class RoomController
     ]);
 }
 
-    public function getAllRooms()
-    {
-        // Здесь будет логика получения всех комнат
-        // Например, обращение к модели Room
-        return [
-            ['id' => 1, 'name' => 'Deluxe Room'],
-            ['id' => 2, 'name' => 'Standard Room']
-        ];
-    }
+public function getAllRooms()
+{
+    $db = new \app\Core\Database();
+    $query = "SELECT id_room, type FROM rooms"; // SQL-запрос для получения данных
+    return $db->query($query); // Возвращаем массив данных
+}
 
     
 }
