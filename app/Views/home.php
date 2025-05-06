@@ -20,32 +20,25 @@
     <div class="container">
 
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        <div class="col">
-        <?php foreach ($rooms as $room): ?>
-          <div class="card shadow-sm mb-4">
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
-              <title><?= htmlspecialchars($room['type']) ?></title>
-              <rect width="100%" height="100%" fill="#55595c"></rect>
-                <image href="<?= htmlspecialchars($room['id_pictures']) ?>" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" />
-
-            </svg>
-            <div class="card-body">
-              <p class="card-text"><?= htmlspecialchars($room['type']) ?></p>
-              <p class="card-text"><?= htmlspecialchars($room['description']) ?></p>
-              <p class="card-text"><?= htmlspecialchars($room['price']) ?></p>
-              
-
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                    <a href="/room?id=<?= htmlspecialchars($room['id_room']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Contact</button>
-                </div>
-                <small class="text-body-secondary"><?= date('H:i', strtotime($room['created_at'])) ?></small>
-              </div>
-            </div>
+      <?php foreach ($rooms as $room): ?>
+      <div class="col">
+        <div class="card shadow-sm mb-4">
+        <img src="<?= htmlspecialchars($room['road']) ?>" class="card-img-top bd-placeholder-img" style="height: 225px; width: 100%; object-fit: cover;" alt="<?= htmlspecialchars($room['type']) ?>">
+        <div class="card-body">
+          <p class="card-text"><?= htmlspecialchars($room['type']) ?></p>
+          <p class="card-text"><?= htmlspecialchars($room['description']) ?></p>
+          <p class="card-text"><?= htmlspecialchars($room['price']) ?> USD</p>
+          <div class="d-flex justify-content-between align-items-center">
+          <div class="btn-group">
+            <a href="/room?id=<?= htmlspecialchars($room['id_room']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
+            <button type="button" class="btn btn-sm btn-outline-secondary">Contact</button>
           </div>
-        <?php endforeach; ?>
+          <small class="text-body-secondary"><?= date('H:i', strtotime($room['created_at'])) ?></small>
+          </div>
         </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
       </div>
     </div>
   </div>
