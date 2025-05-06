@@ -32,6 +32,8 @@
             <div class="card-body">
               <p class="card-text"><?= htmlspecialchars($room['type']) ?></p>
               <p class="card-text"><?= htmlspecialchars($room['description']) ?></p>
+              <p class="card-text"><?= htmlspecialchars($room['price']) ?></p>
+              
 
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
