@@ -1,11 +1,17 @@
 <?php
 
-namespace app\Core;
+namespace app\Core\Middleware;
 
 class AuthMiddleware
 {
     public static function handle(): void
-    {
+    {   
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+                die("CSRF token validation failed");
+            }
+        }
+
         if (!isset($_SESSION['is_authenticated']) || !$_SESSION['is_authenticated']) {
             header('Location: /login');
             exit();

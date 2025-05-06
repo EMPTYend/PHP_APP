@@ -13,6 +13,7 @@
                     <?php endif; ?>
                     
                     <form action="/login" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" id="email" class="form-control" required>

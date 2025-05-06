@@ -17,6 +17,7 @@
                     <?php endif; ?>
 
                     <form action="/account/update" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                         <div class="form-group mb-3">
                             <label for="name">Имя</label>
                             <input type="text" class="form-control" id="name" name="name" 

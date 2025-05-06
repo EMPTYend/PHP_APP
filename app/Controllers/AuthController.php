@@ -5,7 +5,7 @@ namespace app\Controllers;
 use app\Core\Controller;
 use app\Core\View;
 use app\Models\User;
-use Exception; 
+use Exception;
 
 class AuthController extends Controller
 {
@@ -13,27 +13,42 @@ class AuthController extends Controller
     {
         View::render('auth/login', [
             'title' => 'Login',
-            'error' => $_SESSION['error'] ?? null
+            'error' => $_SESSION['error'] ?? null,
+            'old' => $_SESSION['old'] ?? []
         ]);
-        unset($_SESSION['error']);
+        unset($_SESSION['error'], $_SESSION['old']);
     }
 
     public function login()
     {
+        
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
+        
+        $_SESSION['old'] = ['email' => $email];
 
         try {
             $user = User::findByEmail($email);
             
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['user'] = $user;
-                $_SESSION['is_authenticated'] = true;
-                header('Location: /account');
-                exit();
+            if (!$user) {
+                throw new Exception('Пользователь с таким email не найден');
             }
             
-            throw new Exception('Invalid credentials');
+            if (!password_verify($password, $user['password'])) {
+                throw new Exception('Неверный пароль');
+            }
+            
+            $_SESSION['user'] = [
+                'id_user' => $user['id_user'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'role' => $user['role']
+            ];
+            $_SESSION['is_authenticated'] = true;
+            
+            header('Location: /account');
+            exit();
+            
         } catch (Exception $e) {
             $_SESSION['error'] = $e->getMessage();
             header('Location: /login');
@@ -43,44 +58,77 @@ class AuthController extends Controller
 
     public function showRegistrationForm()
     {
-        View::render('auth/register', ['title' => 'Register']);
+        View::render('auth/register', [
+            'title' => 'Register',
+            'errors' => $_SESSION['errors'] ?? [],
+            'old' => $_SESSION['old'] ?? []
+        ]);
+        unset($_SESSION['errors'], $_SESSION['old']);
     }
 
     public function register()
-{
-    // Получаем данные из формы
-    $name = $_POST['name'] ?? '';
-    $phone = $_POST['phone'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    
-    // Хешируем пароль
-    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-    
-    // Пробуем сохранить пользователя
-    try {
-        $result = User::create([
-            'name' => $name,
-            'phone' => $phone,
-            'email' => $email,
-            'password' => $hashedPassword
-        ]);
+    {
+        $name = $_POST['name'] ?? '';
+        $phone = $_POST['phone'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
         
-        if ($result) {
-            $_SESSION['user'] = User::findByEmail($email);
+        $_SESSION['old'] = compact('name', 'phone', 'email');
+
+        try {
+            // Валидация
+            $errors = [];
+            if (empty($name)) $errors['name'] = 'Имя обязательно';
+            if (empty($phone)) $errors['phone'] = 'Телефон обязателен';
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Некорректный email';
+            }
+            if (empty($password)) $errors['password'] = 'Пароль обязателен';
+            if ($password !== $confirmPassword) $errors['confirm_password'] = 'Пароли не совпадают';
+            
+            if (User::findByEmail($email)) {
+                $errors['email'] = 'Email уже занят';
+            }
+            
+            if (!empty($errors)) {
+                $_SESSION['errors'] = $errors;
+                throw new Exception('Исправьте ошибки в форме');
+            }
+            
+            // Создание пользователя
+            $result = User::create([
+                'name' => $name,
+                'phone' => $phone,
+                'email' => $email,
+                'password' => password_hash($password, PASSWORD_BCRYPT),
+                'role' => 'user'
+            ]);
+            
+            if (!$result) {
+                throw new Exception('Ошибка при создании пользователя');
+            }
+            
+            // Автоматический вход после регистрации
+            $user = User::findByEmail($email);
+            $_SESSION['user'] = [
+                'id_user' => $user['id_user'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'role' => $user['role']
+            ];
+            $_SESSION['is_authenticated'] = true;
+            
             header('Location: /account');
             exit();
-        } else {
-            throw new Exception('Ошибка при сохранении пользователя');
+            
+        } catch (Exception $e) {
+            error_log('Registration error: ' . $e->getMessage());
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /register');
+            exit();
         }
-    } catch (Exception $e) {
-        // Логируем ошибку и показываем пользователю
-        error_log($e->getMessage());
-        $_SESSION['error'] = 'Ошибка регистрации: ' . $e->getMessage();
-        header('Location: /register');
-        exit();
     }
-}
 
     public function logout()
     {

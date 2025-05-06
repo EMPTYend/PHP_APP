@@ -5,24 +5,16 @@ namespace app\Controllers;
 use app\Core\Controller;
 use app\Core\View;
 use app\Models\User;
-use app\Core\AuthMiddleware;
+use app\Core\Middleware\AuthMiddleware;
 
 class AdminController extends Controller
 {
     public function __construct()
-{
-    AuthMiddleware::handle();
-    
-    if ($_SESSION['user']['role'] !== 'admin') {
-        $_SESSION['error'] = "Доступ запрещён";
-        header('Location: /account');
-        exit();
-    }
-}
-
-    private function checkAdmin()
     {
+        AuthMiddleware::handle();
+        
         if ($_SESSION['user']['role'] !== 'admin') {
+            $_SESSION['error'] = "Доступ запрещён";
             header('Location: /account');
             exit();
         }
@@ -31,6 +23,7 @@ class AdminController extends Controller
     public function userManagement()
     {
         $users = User::getAllUsers();
+        error_log("Users count: " . count($users)); // Логирование
         
         View::render('admin/users', [
             'title' => 'User Management',
@@ -38,66 +31,109 @@ class AdminController extends Controller
         ]);
     }
 
-    public function editUserForm($email)
-{
-    $user = User::findByEmail($email);
-    
-    if (!$user) {
-        $_SESSION['error'] = "User not found";
-        header('Location: /admin/users');
-        exit();
+    public function editUserForm()
+    {
+        $id = $_GET['id'] ?? 0;
+        error_log("Editing user ID: " . $id);
+        
+        $user = User::findById($id);
+        
+        if (!$user) {
+            $_SESSION['error'] = "Пользователь не найден";
+            header('Location: /admin/users');
+            exit();
+        }
+        
+        View::render('admin/edit_user', [
+            'title' => 'Редактирование пользователя', 
+            'user' => $user
+        ]);
     }
-    
-    View::render('admin/edit_user', [
-        'title' => 'Edit User',
-        'user' => $user
-    ]);
-}
 
-    public function updateUser($email)
-    {   
-        $newEmail = $_POST['email'];
-    
-        // Проверяем, не занят ли новый email другим пользователем
-        if ($newEmail !== $email) {
-            $existingUser = User::findByEmail($newEmail);
-            if ($existingUser) {
-                $_SESSION['error'] = "Email already exists";
-                header("Location: /admin/users/edit/" . urlencode($email));
+    public function updateUser()
+    {
+        session_start(); // Добавляем старт сессии
+        
+        // Получаем ID (лучше из POST, если форма отправляет методом POST)
+        $id = $_POST['id'] ?? 0;
+        
+        // CSRF Protection
+        if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+            $_SESSION['error'] = "Недействительный CSRF-токен";
+            header("Location: /admin/users/edit/{$id}");
+            exit();
+        }
+
+        // Валидация обязательных полей
+        $required = ['name', 'phone', 'email', 'role'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                $_SESSION['error'] = "Поле " . ucfirst($field) . " обязательно для заполнения";
+                header("Location: /admin/users/edit/{$id}");
                 exit();
             }
         }
         
+        $user = User::findById($id);
+        
+        if (!$user) {
+            $_SESSION['error'] = "Пользователь не найден";
+            header('Location: /admin/users');
+            exit();
+        }
+        
+        // Санитизация данных
         $data = [
-            'name' => $_POST['name'],
-            'phone' => $_POST['phone'],
-            'email' => $_POST['email'], // Новый email (может быть таким же)
-            'role' => $_POST['role']
+            'name' => htmlspecialchars(trim($_POST['name'])),
+            'phone' => htmlspecialchars(trim($_POST['phone'])),
+            'email' => filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL),
+            'role' => htmlspecialchars(trim($_POST['role']))
         ];
         
-        // Сначала найдем пользователя по старому email
-        $user = User::findByEmail($email);
-        if (!$user) {
-            $_SESSION['error'] = "User not found";
-            header('Location: /admin/users');
+        if ($data['email'] === false) {
+            $_SESSION['error'] = "Некорректный email";
+            header("Location: /admin/users/edit/{$id}");
             exit();
         }
         
-        // Обновляем данные
-        User::updateUser($user['id_user'], $data); // Обновляем по ID, но ищем по email
+        // Проверка уникальности email
+        if ($data['email'] !== $user['email'] && User::findByEmail($data['email'])) {
+            $_SESSION['error'] = "Email уже используется";
+            header("Location: /admin/users/edit/{$id}");
+            exit();
+        }
+        
+        // Обновление данных
+        if (User::updateUser($id, $data)) {
+            $_SESSION['success'] = "Данные обновлены";
+        } else {
+            $_SESSION['error'] = "Ошибка при обновлении данных";
+        }
         
         header('Location: /admin/users');
+        exit();
     }
 
-    public function deleteUser($id)
+    public function deleteUser()
     {
-        User::deleteUser($id);
-        header('Location: /admin/users');
-        if ($id == $_SESSION['user']['id_user']) {
-            $_SESSION['error'] = "You cannot delete yourself!";
+        session_start();
+        
+        // CSRF проверка
+        if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+            $_SESSION['error'] = "Ошибка безопасности";
             header('Location: /admin/users');
             exit();
         }
+
+        $id = $_POST['id'] ?? 0;
+        
+        if (User::delete($id)) {
+            $_SESSION['success'] = "Пользователь удален";
+        } else {
+            $_SESSION['error'] = "Ошибка при удалении";
+        }
+        
+        header('Location: /admin/users');
+        exit();
     }
-    
 }

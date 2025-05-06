@@ -19,6 +19,7 @@
                     <?php endif; ?>
                     
                     <form action="/register" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                         <div class="form-group">
                             <label for="name">Full Name</label>
                             <input type="text" name="name" id="name" class="form-control" 

@@ -25,22 +25,6 @@ $router->get('/account/edit', ['app\Controllers\AccountController', 'editProfile
 $router->post('/account/update', ['app\Controllers\AccountController', 'updateProfile']);
 
 $router->get('/admin/users', ['app\Controllers\AdminController', 'userManagement']);
-$router->get('/admin/users/edit/(\d+)', ['app\Controllers\AdminController', 'editUserForm']);
-$router->post('/admin/users/update/(\d+)', ['app\Controllers\AdminController', 'updateUser']);
-
-$router->get('/test-db', function() {
-    try {
-        $user = app\Models\User::findByEmail('admin@hotel.com');
-        echo '<pre>';
-        print_r($user);
-        echo '</pre>';
-    } catch (Exception $e) {
-        echo 'DB Error: ' . $e->getMessage();
-    }
-});
-
-$router->get('/test-session', function() {
-    echo '<pre>';
-    print_r($_SESSION);
-    echo '</pre>';
-});
+$router->get('/admin/users/edit', ['app\Controllers\AdminController', 'editUserForm']);
+$router->post('/admin/users/delete', ['app\Controllers\AdminController', 'deleteUser']);
+$router->post('/admin/users/update', ['app\Controllers\AdminController', 'updateUser']); 
