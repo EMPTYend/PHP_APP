@@ -28,3 +28,6 @@ $router->get('/admin/users', ['app\Controllers\AdminController', 'userManagement
 $router->get('/admin/users/edit', ['app\Controllers\AdminController', 'editUserForm']);
 $router->post('/admin/users/delete', ['app\Controllers\AdminController', 'deleteUser']);
 $router->post('/admin/users/update', ['app\Controllers\AdminController', 'updateUser']); 
+
+$router->get('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoomForm']);
+$router->post('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
