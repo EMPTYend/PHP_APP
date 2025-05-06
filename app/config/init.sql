@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS query (
 
 -- Создание администратора по умолчанию (пароль: Admin123)
 INSERT IGNORE INTO user (name, phone, email, password, role) 
-VALUES ('Admin', '+1234567890', 'admin@hotel.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+VALUES ('admin', '+1234567890', 'admin@hotel.com', '$2y$10$Y5KyVgtB8U.9hYF.X3kycuFyITYd.DV8nAsqxYl8eyrcB9uYAIZl.', 'admin');
 
 -- Делюкс номер (люкс)
 INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at)

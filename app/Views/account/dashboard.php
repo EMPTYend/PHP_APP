@@ -10,9 +10,6 @@
                 <div class="card-body">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active" href="/account">Профиль</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="/account/edit">Редактировать профиль</a>
                         </li>
                         <li class="nav-item">
