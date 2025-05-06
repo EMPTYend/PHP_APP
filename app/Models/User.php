@@ -31,4 +31,36 @@ class User extends Model
         $stmt->execute([$email]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
+
+    public static function getAllUsers(): array
+{
+    $stmt = self::db()->query("SELECT * FROM user");
+    return $stmt->fetchAll();
+}
+
+public static function updateUser(int $id, array $data): bool
+{
+    $stmt = self::db()->prepare("
+        UPDATE user 
+        SET name = :name, 
+            phone = :phone, 
+            email = :email, 
+            role = :role 
+        WHERE id_user = :id
+    ");
+    
+    return $stmt->execute([
+        'id' => $id,
+        'name' => $data['name'],
+        'phone' => $data['phone'],
+        'email' => $data['email'],
+        'role' => $data['role']
+    ]);
+}
+
+public static function deleteUser(int $id): bool
+{
+    $stmt = self::db()->prepare("DELETE FROM user WHERE id_user = ?");
+    return $stmt->execute([$id]);
+}
 }
