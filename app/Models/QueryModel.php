@@ -40,7 +40,7 @@ class QueryModel extends Model
             
             return true;
             
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             error_log("PDO Exception: " . $e->getMessage());
             throw new \RuntimeException("Ошибка базы данных при бронировании");
         }

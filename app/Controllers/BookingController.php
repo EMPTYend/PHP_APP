@@ -65,7 +65,7 @@ class BookingController extends Controller
             }
 
             // Сохранение
-            \app\Models\QueryModel::create($data);
+            QueryModel::create($data);
             
             $_SESSION['booking_success'] = true;
             $this->redirect('/booking/success');

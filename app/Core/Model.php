@@ -18,7 +18,7 @@ abstract class Model
                 
                 // Проверка соединения
                 self::$db->query('SELECT 1')->fetch();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 error_log('Model initialization failed: ' . $e->getMessage());
                 throw new \RuntimeException('Database connection failed');
             }
