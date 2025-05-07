@@ -12,7 +12,73 @@ class RoomController
 {
     public function search()
     {
-        echo "Room Search Results!";
+        View::render('search', [
+            'title' => 'Search Page',
+            'user' => $_SESSION['user'] ?? null
+        ]);
+    }
+
+    public function search_result($params)
+    {
+        // Проверка, если хотя бы один параметр передан
+        if (
+            empty($params['type']) &&
+            empty($params['peoples']) &&
+            empty($params['min_price']) &&
+            empty($params['max_price']) &&
+            empty($params['rooms']) &&
+            empty($params['beds'])
+        ) {
+            echo "At least one search parameter must be provided";
+            return;
+        }
+
+        $queryParts = [];
+        $queryParams = [];
+
+        if (!empty($params['type'])) {
+            $queryParts[] = "type = :type";
+            $queryParams['type'] = htmlspecialchars($params['type']);
+        }
+        if (!empty($params['peoples'])) {
+            $queryParts[] = "peoples >= :peoples";
+            $queryParams['peoples'] = (int)$params['peoples'];
+        }
+        if (!empty($params['min_price'])) {
+            $queryParts[] = "price >= :min_price";
+            $queryParams['min_price'] = (float)$params['min_price'];
+        }
+        if (!empty($params['max_price'])) {
+            $queryParts[] = "price <= :max_price";
+            $queryParams['max_price'] = (float)$params['max_price'];
+        }
+        if (!empty($params['rooms'])) {
+            $queryParts[] = "rooms >= :rooms";
+            $queryParams['rooms'] = (int)$params['rooms'];
+        }
+        if (!empty($params['beds'])) {
+            $queryParts[] = "bed = :beds";
+            $queryParams['beds'] = htmlspecialchars($params['beds']);
+        }
+
+        $queryCondition = implode(' AND ', $queryParts);
+
+        $pdo = new \PDO("mysql:host=localhost;dbname=hotel_db;charset=utf8", "user", "root");
+
+        $sql = "SELECT * FROM rooms
+            WHERE $queryCondition";
+            // Removed unnecessary check-in and check-out parameters
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($queryParams);
+
+        $rooms = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        View::render('search_result', [
+            'title' => 'Search Result',
+            'rooms' => $rooms,
+            'user' => $_SESSION['user'] ?? null
+        ]);
     }
 
     public function home()

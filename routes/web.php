@@ -10,7 +10,8 @@ if (!isset($router)) {
 // Основные маршруты
 $router->get('/', ['app\Controllers\RoomController', 'home']);
 $router->get('/rooms', ['app\Controllers\RoomController', 'rooms']);
-$router->post('/room/search', ['app\Controllers\RoomController', 'search']);
+$router->get('/search', ['app\Controllers\RoomController', 'search']);
+$router->post('/search_result', ['app\Controllers\RoomController', 'search_result']);
 
 // Аутентификация
 $router->get('/login', ['app\Controllers\AuthController', 'showLoginForm']);
