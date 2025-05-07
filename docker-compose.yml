@@ -11,14 +11,18 @@ services:
        - .:/var/www/html
        - ./public:/var/www/html/public:ro
        - ./app/public/storage:/var/www/html/public/storage
+       - php_uploads:/tmp/php_uploads
+       - storage_volume:/var/www/html/public/storage
     depends_on:
       db:
-        condition: service_healthy  # Ожидаем готовности БД
+        condition: service_healthy
     environment:
       DB_HOST: db
       DB_USER: user
       DB_PASS: root
       DB_NAME: hotel_db
+      UPLOAD_TMP_DIR: /tmp/php_uploads
+      TMP: /tmp/php_uploads
     networks:
       - app-network
 
@@ -64,7 +68,8 @@ services:
 
 volumes:
   mysql_data:
-    driver: local
+  php_uploads:
+  storage_volume:
 
 networks:
   app-network:

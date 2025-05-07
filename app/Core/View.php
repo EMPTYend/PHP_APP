@@ -21,4 +21,5 @@ class View
             echo $content;
         }
     }
+
 }

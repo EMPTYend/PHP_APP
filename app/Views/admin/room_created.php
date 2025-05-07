@@ -11,16 +11,25 @@
                 <strong>ID:</strong> <?= htmlspecialchars($roomId) ?><br>
                 <strong>Type:</strong> <?= htmlspecialchars($roomData['type']) ?><br>
                 <strong>Price:</strong> $<?= htmlspecialchars($roomData['price']) ?><br>
-                <strong>Description:</strong> <?= htmlspecialchars($roomData['description']) ?>
+                <strong>Description:</strong> <?= nl2br(htmlspecialchars($roomData['description'])) ?>
             </p>
 
             <?php if (!empty($uploadedImages)): ?>
                 <h5 class="mt-4">Uploaded Images</h5>
                 <div class="d-flex flex-wrap gap-3">
                     <?php foreach ($uploadedImages as $image): ?>
-                        <img src="/<?= htmlspecialchars($image) ?>" alt="Room image" class="img-thumbnail" style="max-height: 150px;">
+                        <?php 
+                            $imagePath = htmlspecialchars($storagePath . '/' . $image['road']);
+                            if (file_exists(__DIR__ . '/../' . $imagePath)): 
+                        ?>
+                            <img src="<?= $imagePath ?>" alt="Room image" class="img-thumbnail" style="max-height: 150px;">
+                        <?php else: ?>
+                            <p class="text-danger">Image not found: <?= $imagePath ?></p>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
+            <?php else: ?>
+                <p>No images uploaded yet.</p>
             <?php endif; ?>
         </div>
         <div class="card-footer">

@@ -4,6 +4,9 @@ namespace app\Models;
 
 use app\Core\Model;
 use PDO;
+use PDOException;
+use finfo;
+use RuntimeException;
 
 class Room extends Model
 {
@@ -13,49 +16,97 @@ class Room extends Model
 
     public static function saveImageAndAssignToRoom(array $image, int $roomId): ?string
     {
-        $storagePath = __DIR__ . '/../../public/storage/';
-        if (!is_dir($storagePath)) {
-            mkdir($storagePath, 0755, true);
-        }
-
-        // Проверка типа изображения
-        $imageType = mime_content_type($image['tmp_name']);
-        if (strpos($imageType, 'image/') !== 0) {
-            // Неверный тип файла
+        // Проверка временного файла
+        if (!isset($image['tmp_name']) || !file_exists($image['tmp_name'])) {
+            error_log('Temporary file error: ' . print_r($image, true));
             return null;
         }
 
-        $imageName = uniqid() . '_' . basename($image['name']);
-        $imagePath = $storagePath . $imageName;
+        // Создаем директорию для комнаты
+        $uploadDir = __DIR__ . '/../../public/storage/rooms/' . $roomId . '/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
 
-        if (!move_uploaded_file($image['tmp_name'], $imagePath)) {
+        // Получаем оригинальное имя и расширение
+        $originalName = pathinfo($image['name'], PATHINFO_FILENAME);
+        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+
+        // Генерируем уникальное имя файла
+        $filename = self::generateUniqueFilename($uploadDir, $originalName, $extension);
+        $destination = $uploadDir . $filename;
+
+        // Перемещаем файл
+        if (!move_uploaded_file($image['tmp_name'], $destination)) {
+            error_log("Failed to move uploaded file to: $destination");
             return null;
         }
 
-        $relativePath = 'storage/' . $imageName;
+        // Устанавливаем права
+        chmod($destination, 0644);
 
-        // Вставка данных в таблицу pictures
-        $stmt = self::db()->prepare("INSERT INTO pictures (road, created_at) VALUES (:road, :created_at)");
-        if (!$stmt->execute(['road' => $relativePath, 'created_at' => date('Y-m-d H:i:s')])) {
-            echo "Ошибка вставки в pictures: " . implode(", ", $stmt->errorInfo());
+        // Сохраняем в БД
+        $relativePath = 'storage/rooms/' . $roomId . '/' . $filename;
+        
+        try {
+            $db = self::db();
+            $db->beginTransaction();
+
+            $stmt = $db->prepare("INSERT INTO pictures (path, room_id, original_name, created_at) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$relativePath, $roomId, $originalName . '.' . $extension, date('Y-m-d H:i:s')]);
+            
+            $pictureId = $db->lastInsertId();
+
+            $stmt = $db->prepare("UPDATE rooms SET id_pictures = ? WHERE id_room = ?");
+            $stmt->execute([$pictureId, $roomId]);
+
+            $db->commit();
+            return $relativePath;
+
+        } catch (PDOException $e) {
+            $db->rollBack();
+            if (file_exists($destination)) {
+                unlink($destination);
+            }
+            error_log('Database error: ' . $e->getMessage());
             return null;
         }
-
-        $pictureId = self::db()->lastInsertId();
-
-        // Обновление записи в таблице rooms
-        $stmt = self::db()->prepare("UPDATE rooms SET id_pictures = :id_pictures WHERE id_room = :id_room");
-        if (!$stmt->execute([
-            'id_pictures' => $pictureId,
-            'id_room' => $roomId
-        ])) {
-            echo "Ошибка обновления в rooms: " . implode(", ", $stmt->errorInfo());
-            return null;
-        }
-
-        return $relativePath;
     }
 
+    private static function generateUniqueFilename(string $directory, string $originalName, string $extension): string
+    {
+        $counter = 1;
+        $filename = $originalName . '.' . $extension;
+        $baseName = $originalName;
+        
+        // Проверяем существование файла и добавляем суффикс при необходимости
+        while (file_exists($directory . $filename)) {
+            $filename = $baseName . '_' . $counter . '.' . $extension;
+            $counter++;
+        }
+        
+        return $filename;
+    }
+
+    private static function sanitizeFilename(string $filename): string
+    {
+        // Удаляем небезопасные символы
+        $filename = preg_replace('/[^a-zA-Z0-9-_\.]/', '', $filename);
+        // Ограничиваем длину имени
+        return substr($filename, 0, 100);
+    }
+
+    private static function getExtensionByMime(string $mimeType): string
+    {
+        $map = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp'
+        ];
+        
+        return $map[$mimeType] ?? 'bin';
+    }
     
     public static function create(array $data): int
     {
@@ -128,6 +179,23 @@ class Room extends Model
 
         ]);
     }
+
+    public static function getImagesByRoomId(int $roomId): array
+    {
+        $stmt = self::db()->prepare("
+            SELECT p.road 
+            FROM pictures p 
+            INNER JOIN rooms r ON r.id_pictures = p.id_pictures 
+            WHERE r.id_room = :roomId
+        ");
+        
+        $stmt->execute(['roomId' => $roomId]);
+
+        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $images ?: [];
+    }
+
 
     public static function delete(int $id): bool
     {

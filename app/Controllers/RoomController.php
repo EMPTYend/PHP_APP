@@ -59,42 +59,90 @@ class RoomController
     
     public function createRoom()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return View::render('admin/create_room', ['title' => 'Create Room']);
-        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-        // Валидация CSRF токена
-        if (!$this->validateCsrfToken($_POST['csrf_token'] ?? '')) {
-            return $this->showFormWithError('Invalid CSRF token', $_POST);
-        }
+            $data = [
+                'type' => $_POST['type'] ?? null,
+                'peoples' => $_POST['peoples'] ?? null,
+                'rooms' => $_POST['rooms'] ?? null,
+                'bed' => $_POST['bed'] ?? null,
+                'price' => $_POST['price'] ?? null,
+                'description' => $_POST['description'] ?? null,
+            ];
 
-        try {
-            $data = $this->prepareRoomData($_POST);
             $errors = $this->validateRoomData($data);
-            
-            if (!empty($errors)) {
-                return $this->showFormWithErrors($errors, $_POST, $_FILES);
-            }
 
-            $uploadedFiles = $_FILES;
+            if (empty($errors)) {
+                $roomId = Room::create($data);
 
-                return Database::transaction(function() use ($data, $uploadedFiles) {
-                    $roomId = Room::create($data);
-                    $uploadedImages = $this->processUploadedImages($uploadedFiles['images'] ?? [], $roomId);
-                    
-                    return View::render('admin/room_created', [
-                        'title' => 'Room Created',
-                        'success' => 'Room created successfully!',
+                if ($roomId) {
+                    $storagePath = realpath(dirname(__FILE__) . '/../Views/storage');
+
+                    if (!file_exists($storagePath)) {
+                        mkdir($storagePath, 0777, true);
+                    }
+
+                    if (!empty($_FILES['images'])) {
+                        foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
+                            $file = [
+                                'tmp_name' => $tmpName,
+                                'name' => $_FILES['images']['name'][$key]
+                            ];
+
+                            if ($_FILES['images']['error'][$key] != UPLOAD_ERR_OK) {
+                                echo "Ошибка при загрузке файла: " . $_FILES['images']['error'][$key];
+                                continue;
+                            }
+
+                            // Генерация уникального имени с использованием `sanitizeFilename()`
+                            $originalName = self::sanitizeFilename(pathinfo($file['name'], PATHINFO_FILENAME));
+                            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                            $newFileName = $originalName . '_' . date('Ymd_His') . '.' . $extension;
+                            
+                            $filePath = $storagePath . '/' . $newFileName;
+
+                            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                                echo "Изображение загружено успешно!";
+                                $fileData = [
+                                    'name' => $newFileName,
+                                    'original_name' => $file['name'],
+                                    'path' => $filePath
+                                ];
+                                
+                                Room::saveImageAndAssignToRoom($fileData, $roomId);
+                            } else {
+                                echo "Ошибка при сохранении изображения!";
+                            }
+                        }
+                    }
+
+                    View::render('admin/room_created', [
+                        'success' => 'Room successfully created!',
                         'roomId' => $roomId,
                         'roomData' => $data,
-                        'uploadedImages' => $uploadedImages
+                        'uploadedImages' => Room::getImagesByRoomId($roomId)
                     ]);
-                });
+                    return;
+                }
+            }
 
-        } catch (Exception $e) {
-            return $this->showFormWithError($e->getMessage(), $_POST, $_FILES);
+            View::render('admin/room_create', [
+                'errors' => $errors,
+                'formData' => $data
+            ]);
         }
     }
+
+
+    private static function sanitizeFilename($filename)
+    {
+        // Удаляем небезопасные символы
+        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
+        // Ограничиваем длину имени файла
+        return substr($sanitized, 0, 100);
+    }
+    
+
 
     private function redirectWithError(string $url, string $error): void
     {
@@ -178,19 +226,25 @@ class RoomController
     {
         $roomId = $params['id'];
         $room = Room::findById($roomId);
-        
+
         if (!$room) {
             header('HTTP/1.0 404 Not Found');
             exit;
         }
 
+        // Получение пути для хранения изображений через View
+        $storagePath = __DIR__ . '/../Views/storage';  // Укажите нужный путь
+
+        // Передаем данные в шаблон
         View::render('admin/room_created', [
             'title' => 'Room #' . $roomId,
             'roomId' => $roomId,
             'roomData' => $room,
-            'uploadedImages' => $this->getRoomImages($roomId)
+            'uploadedImages' => $this->getRoomImages($roomId),
+            'storagePath' => $storagePath  // Путь для хранения изображений
         ]);
     }
+
 
     private function getRoomImages($roomId): array
     {
@@ -211,18 +265,33 @@ class RoomController
 
     private function validateRoomData(array $data): array
     {
-        $required = ['type', 'description', 'price'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                throw new \InvalidArgumentException("Поле $field обязательно для заполнения");
-            }
+        $errors = [];
+
+        if (empty($data['type'])) {
+            $errors['type'] = 'Room type is required.';
         }
 
-        return [
-            'type' => htmlspecialchars(trim($data['type'])),
-            'description' => htmlspecialchars(trim($data['description'])),
-            'price' => (float)$data['price']
-        ];
+        if (empty($data['peoples']) || !is_numeric($data['peoples'])) {
+            $errors['peoples'] = 'Number of people is required.';
+        }
+
+        if (empty($data['rooms']) || !is_numeric($data['rooms'])) {
+            $errors['rooms'] = 'Number of rooms is required.';
+        }
+
+        if (empty($data['bed'])) {
+            $errors['bed'] = 'Bed type is required.';
+        }
+
+        if (empty($data['price']) || !is_numeric($data['price'])) {
+            $errors['price'] = 'Price must be a valid number.';
+        }
+
+        if (empty($data['description'])) {
+            $errors['description'] = 'Description is required.';
+        }
+
+        return $errors;
     }
 
     

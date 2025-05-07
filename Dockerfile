@@ -1,4 +1,3 @@
-# Используем официальный образ PHP с Apache (обновленная версия)
 FROM php:8.2.28-apache-bookworm
 
 # Устанавливаем системные зависимости и расширения PHP
@@ -16,22 +15,29 @@ RUN apt-get update && apt-get install -y \
 # Включаем необходимые модули Apache
 RUN a2enmod rewrite headers
 
-# Настройка Apache
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
-    mkdir -p /var/www/html/public && \
-    chown -R www-data:www-data /var/www/html
-
-# Установка DocumentRoot (используем новый формат ENV)
+# Настройка Apache и DocumentRoot
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Копируем только необходимые файлы (многоступенчатая сборка)
-COPY --chown=www-data:www-data . /var/www/html/
+# Настройка PHP для загрузки файлов
+RUN echo "file_uploads = On" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "upload_max_filesize = 20M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 22M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_file_uploads = 20" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "upload_tmp_dir = /tmp/php_uploads" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "session.save_path = /tmp/php_sessions" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && mkdir -p /tmp/php_uploads \
+    && mkdir -p /tmp/php_sessions \
+    && chmod -R 777 /tmp/php_uploads \
+    && chmod -R 777 /tmp/php_sessions
 
 # Устанавливаем рабочую директорию
 WORKDIR /var/www/html
 
-# Обновляем композер
+# Копируем файлы
+COPY --chown=www-data:www-data . /var/www/html/
+
+# Устанавливаем composer, если существует composer.json
 RUN if [ -f "composer.json" ]; then \
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
