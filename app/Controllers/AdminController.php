@@ -146,49 +146,79 @@ class AdminController extends Controller
     }
 
     public function createRoom()
-    {
-        session_start();
+{
+    session_start();
 
-        // CSRF Protection
-        if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
-            $_SESSION['error'] = "Недействительный CSRF-токен";
-            header('Location: /admin/rooms/create');
-            exit();
-        }
-
-        // Валидация обязательных полей
-        $required = ['name', 'capacity', 'price'];
-        foreach ($required as $field) {
-            if (empty($_POST[$field])) {
-                $_SESSION['error'] = "Поле " . ucfirst($field) . " обязательно для заполнения";
-                header('Location: /admin/rooms/create');
-                exit();
-            }
-        }
-
-        // Санитизация данных
-        $data = [
-            'name' => htmlspecialchars(trim($_POST['name'])),
-            'capacity' => (int) $_POST['capacity'],
-            'price' => (float) $_POST['price'],
-            'description' => htmlspecialchars(trim($_POST['description'] ?? ''))
-        ];
-
-        // Проверка корректности данных
-        if ($data['capacity'] <= 0 || $data['price'] <= 0) {
-            $_SESSION['error'] = "Некорректные данные для вместимости или цены";
-            header('Location: /admin/rooms/create');
-            exit();
-        }
-
-        // Создание новой комнаты
-        if (Room::create($data)) {
-            $_SESSION['success'] = "Комната успешно создана";
-        } else {
-            $_SESSION['error'] = "Ошибка при создании комнаты";
-        }
-
-        header('Location: /admin/rooms');
+    // Защита CSRF
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Недействительный CSRF-токен";
+        header('Location: admin/create_rooms');
         exit();
     }
+
+    // Проверка обязательных полей
+    $required = ['type', 'peoples', 'rooms', 'bed', 'price', 'description'];
+    foreach ($required as $field) {
+        if (empty($_POST[$field])) {
+            $_SESSION['error'] = "Поле " . ucfirst($field) . " обязательно для заполнения";
+            header('Location: admin/create_rooms');
+            exit();
+        }
+    }
+
+    // Обработка загруженных файлов
+    $pictureIds = [];
+    if (!empty($_FILES['images'])) {
+        foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
+            if ($_FILES['images']['error'][$key] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../../public/storage/';
+                $fileName = uniqid() . '_' . basename($_FILES['images']['name'][$key]);
+                $filePath = $uploadDir . $fileName;
+
+                if (move_uploaded_file($tmpName, $filePath)) {
+                    $relativePath = 'storage/' . $fileName;
+                    
+                    // Сохранение в таблицу pictures
+                    $db = new \app\Core\Database();
+                    $query = "INSERT INTO pictures (road) VALUES (:road)";
+                    $db->query($query, ['road' => $relativePath]);
+                    $pictureIds[] = $db->lastInsertId();
+                }
+            }
+        }
+    }
+
+    if (empty($pictureIds)) {
+        $_SESSION['error'] = "Необходимо загрузить хотя бы одно изображение";
+        header('Location: admin/create_rooms');
+        exit();
+    }
+
+    // Подготовка данных комнаты
+    $data = [
+        'type' => $_POST['type'],
+        'peoples' => $_POST['peoples'],
+        'rooms' => $_POST['rooms'],
+        'bed' => $_POST['bed'],
+        'price' => $_POST['price'],
+        'description' => $_POST['description'],
+        'id_pictures' => $pictureIds[0], // Используем первое изображение как основное
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ];
+
+    // Сохранение в базу данных
+    $db = new \app\Core\Database();
+    $query = "INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at) 
+              VALUES (:type, :peoples, :rooms, :bed, :price, :description, :id_pictures, :created_at, :updated_at)";
+    
+    if ($db->query($query, $data)) {
+        $_SESSION['success'] = "Комната успешно создана";
+        header('Location: admin/create_rooms');
+    } else {
+        $_SESSION['error'] = "Ошибка при создании комнаты";
+        header('Location: admin/create_rooms');
+    }
+    exit();
+}
 }

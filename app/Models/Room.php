@@ -9,6 +9,35 @@ class Room extends Model
 {
     protected static $table = 'rooms';
 
+    protected static $primaryKey = 'id_room';
+
+    public static function saveImageAndAssignToRoom(array $image, int $roomId): bool
+    {
+        // Save the image to public/storage
+        $storagePath = 'public/storage/';
+        $imageName = uniqid() . '_' . $image['name'];
+        $imagePath = $storagePath . $imageName;
+
+        if (!move_uploaded_file($image['tmp_name'], $imagePath)) {
+            return false;
+        }
+
+        // Insert the image path into the pictures table
+        $stmt = self::db()->prepare("INSERT INTO pictures (path) VALUES (:path)");
+        if (!$stmt->execute(['path' => $imagePath])) {
+            return false;
+        }
+
+        // Get the ID of the inserted picture
+        $pictureId = self::db()->lastInsertId();
+
+        // Update the room's id_pictures column with the picture ID
+        $stmt = self::db()->prepare("UPDATE rooms SET id_pictures = :id_pictures WHERE id_room = :id_room");
+        return $stmt->execute([
+            'id_pictures' => $pictureId,
+            'id_room' => $roomId,
+        ]);
+    }
     
     public static function create(array $data): bool
     {
@@ -22,8 +51,8 @@ class Room extends Model
             'peoples' => $data['peoples'],
             'description' => $data['description'],
             'bed' => $data['bed'],
-            'id_pictures' => $data['id_pictures'],
             'price' => $data['price'],
+
             'created_at' => $data['created_at'],
             'updated_at' => $data['updated_at'],
 

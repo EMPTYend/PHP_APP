@@ -30,6 +30,7 @@ $router->post('/admin/users/delete', ['app\Controllers\AdminController', 'delete
 $router->post('/admin/users/update', ['app\Controllers\AdminController', 'updateUser']); 
 
 $router->get('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoomForm']);
+<<<<<<< HEAD
 $router->post('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
 
 // Маршруты для бронирования
@@ -38,3 +39,6 @@ $router->post('/booking', ['app\Controllers\BookingController', 'createBooking']
 
 // Маршрут для страницы успеха
 $router->get('/booking/success', ['app\Controllers\BookingController', 'successPage']);
+=======
+$router->post('/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
+>>>>>>> b107a560a2a2cb567434304a42feb2b66947774c
