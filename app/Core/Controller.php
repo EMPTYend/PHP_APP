@@ -2,6 +2,7 @@
 namespace app\Core;
 
 use app\Core\Database;
+use app\Core\View;
 
 class Controller
 {
@@ -12,17 +13,23 @@ class Controller
         $this->db = Database::connect();
     }
 
-    protected function view(string $viewPath, array $data = []): void
+    protected array $middlewares = [];
+
+    public function registerMiddleware(string $middlewareClass, string $method = 'handle')
     {
-        extract($data, EXTR_SKIP);
-        $fullPath = __DIR__ . '/../../Views/' . $viewPath . '.php';
-        
-        if (!file_exists($fullPath)) {
-            throw new \RuntimeException("View not found: {$viewPath}");
-        }
-        
-        require $fullPath;
+        $this->middlewares[] = ['class' => $middlewareClass, 'method' => $method];
     }
+
+    public function getMiddlewares(): array
+    {
+        return $this->middlewares;
+    }
+
+    protected function view(string $view, array $params = [])
+    {
+        View::render($view, $params);
+    }
+
     
     protected function redirect(string $url): void
     {

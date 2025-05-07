@@ -12,7 +12,7 @@ class Database
     public static function connect(): PDO
     {
         if (self::$instance === null) {
-            $config = require __DIR__ . '/../config/db.php';
+            $config = require __DIR__ . '/../Config/db.php';
             try {
                 self::$instance = new PDO(
                     "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4",
@@ -25,15 +25,17 @@ class Database
                     ]
                 );
             } catch (PDOException $e) {
-                // Логируем ошибку подключения
                 error_log('Ошибка подключения к базе данных: ' . $e->getMessage());
                 throw new Exception('Ошибка подключения к базе данных: ' . $e->getMessage());
             }
         }
         return self::$instance;
     }
+    
+    private function __construct() {}
+    private function __clone() {}
 
-    public function query(string $sql, array $params = []): array
+    public static function query(string $sql, array $params = []): array
     {
         try {
             $stmt = self::connect()->prepare($sql);

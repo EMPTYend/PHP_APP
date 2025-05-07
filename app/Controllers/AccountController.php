@@ -4,7 +4,6 @@ namespace app\Controllers;
 
 use app\Core\Controller;
 use app\Core\View;
-use app\Models\User;
 use app\Core\Middleware\AuthMiddleware;
 
 class AccountController extends Controller

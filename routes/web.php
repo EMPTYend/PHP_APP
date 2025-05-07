@@ -31,3 +31,10 @@ $router->post('/admin/users/update', ['app\Controllers\AdminController', 'update
 
 $router->get('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoomForm']);
 $router->post('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
+
+// Маршруты для бронирования
+$router->get('/booking', ['app\Controllers\BookingController', 'showForm']);
+$router->post('/booking', ['app\Controllers\BookingController', 'createBooking']);
+
+// Маршрут для страницы успеха
+$router->get('/booking/success', ['app\Controllers\BookingController', 'successPage']);

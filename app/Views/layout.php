@@ -7,6 +7,11 @@
     <style>
         .auth-items {
             margin-right: 50px;
+            margin-bottom: 0px;
+        }
+        .dl, ol, ul {
+        margin-top: 0;
+        margin-bottom: 0rem;
         }
     </style>
 </head>
@@ -37,8 +42,8 @@
                 </a>
                 
                 <div class="d-flex align-items-center">
-                    <ul class="navbar-nav auth-items"> <!-- Добавляем класс auth-items -->
-                        <?php if (isset($_SESSION['is_authenticated']) && $_SESSION['is_authenticated']): ?>
+                    <ul class="navbar-nav auth-items">
+                        <?php if (isset($_SESSION['user']) && $_SESSION['user']): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                     <?= htmlspecialchars($_SESSION['user']['name']) ?>
@@ -47,12 +52,15 @@
                                     <li><a class="dropdown-item" href="/account">Личный кабинет</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/logout">Выход</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
+                                    
+                                    
                                     <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
                                             <a class="nav-link" href="/admin/users">| Управление аккаунтами |</a>
+                                        </li>
                                     <?php endif; ?>
-                                    </li>
+                                    
                                 </ul>
                             </li>
                         <?php else: ?>
@@ -63,6 +71,11 @@
                                 <a class="nav-link" href="/register">Регистрация</a>
                             </li>
                         <?php endif; ?>
+                    </ul>
+                    <ul>
+                        <li class="nav-item auth-items" >
+                                <a class="btn btn-primary" href="/booking">Забронировать номер</a>
+                        </li>
                     </ul>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader">
                         <span class="navbar-toggler-icon"></span>

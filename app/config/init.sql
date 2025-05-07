@@ -10,12 +10,13 @@ CREATE TABLE IF NOT EXISTS user (
     phone VARCHAR(20) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('user', 'admin') DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
     INDEX idx_phone (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- Таблица изображений
 CREATE TABLE IF NOT EXISTS pictures (
@@ -53,11 +54,13 @@ CREATE TABLE IF NOT EXISTS query (
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
     status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+    comments TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_user) REFERENCES user(id_user) ON DELETE SET NULL,
     INDEX idx_status (status),
     INDEX idx_dates (check_in, check_out)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- Создание администратора по умолчанию (пароль: Admin123)
 INSERT IGNORE INTO user (name, phone, email, password, role) 

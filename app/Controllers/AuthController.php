@@ -21,7 +21,6 @@ class AuthController extends Controller
 
     public function login()
     {
-        
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
         
@@ -42,9 +41,10 @@ class AuthController extends Controller
                 'id_user' => $user['id_user'],
                 'name' => $user['name'],
                 'email' => $user['email'],
+                'phone' => $user['phone'], // Добавьте это поле
                 'role' => $user['role']
             ];
-            $_SESSION['is_authenticated'] = true;
+            // $_SESSION['is_authenticated'] можно удалить, так как проверяем по $_SESSION['user']
             
             header('Location: /account');
             exit();

@@ -7,8 +7,23 @@ use PDOException;
 
 abstract class Model
 {
-    protected static $db;
-    protected static string $table; // Теперь свойство определено
+    protected static ?PDO $db = null;
+    protected static string $table = ''; // Теперь свойство определено
+
+    protected static function init(): void
+    {
+        if (self::$db === null) {
+            try {
+                self::$db = Database::connect();
+                
+                // Проверка соединения
+                self::$db->query('SELECT 1')->fetch();
+            } catch (\PDOException $e) {
+                error_log('Model initialization failed: ' . $e->getMessage());
+                throw new \RuntimeException('Database connection failed');
+            }
+        }
+    }
 
     public static function db(): PDO
 {
@@ -42,4 +57,6 @@ abstract class Model
         $stmt = self::db()->query("SELECT * FROM " . static::$table);
         return $stmt->fetchAll();
     }
+
+    
 }
