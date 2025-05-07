@@ -49,4 +49,29 @@ class Database
             throw new Exception('Ошибка выполнения запроса: ' . $e->getMessage());
         }
     }
+
+    public static function getRoomImages(int $roomId): array
+    {
+    return self::query(
+        "SELECT p.path FROM pictures p
+        JOIN rooms r ON r.id_pictures = p.id_pictures
+        WHERE r.id_room = :room_id",
+        ['room_id' => $roomId]
+        );
+    }
+
+    public static function transaction(callable $callback)
+    {
+        $connection = self::connect();
+        
+        try {
+            $connection->beginTransaction();
+            $result = $callback($connection);
+            $connection->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+    }
 }

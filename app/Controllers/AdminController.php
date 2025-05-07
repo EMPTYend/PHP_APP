@@ -3,10 +3,13 @@
 namespace app\Controllers;
 
 use app\Core\Controller;
+use app\Core\Database;
 use app\Models\Room;
 use app\Core\View;
 use app\Models\User;
 use app\Core\Middleware\AuthMiddleware;
+use PDO;
+use Exception;
 
 class AdminController extends Controller
 {
@@ -138,87 +141,15 @@ class AdminController extends Controller
         exit();
     }
 
-    public function createRoomForm()
+    private function redirectWithError(string $url, string $error): void
     {
-        View::render('admin/create_room', [
-            'title' => 'Создание новой комнаты'
-        ]);
+        $_SESSION['error'] = $error;
+        header("Location: $url");
+        exit;
     }
 
-    public function createRoom()
-{
-    session_start();
-
-    // Защита CSRF
-    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
-        $_SESSION['error'] = "Недействительный CSRF-токен";
-        header('Location: admin/create_rooms');
-        exit();
+    private function validateCsrfToken(string $token): bool
+    {
+        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
     }
-
-    // Проверка обязательных полей
-    $required = ['type', 'peoples', 'rooms', 'bed', 'price', 'description'];
-    foreach ($required as $field) {
-        if (empty($_POST[$field])) {
-            $_SESSION['error'] = "Поле " . ucfirst($field) . " обязательно для заполнения";
-            header('Location: admin/create_rooms');
-            exit();
-        }
-    }
-
-    // Обработка загруженных файлов
-    $pictureIds = [];
-    if (!empty($_FILES['images'])) {
-        foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
-            if ($_FILES['images']['error'][$key] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/storage/';
-                $fileName = uniqid() . '_' . basename($_FILES['images']['name'][$key]);
-                $filePath = $uploadDir . $fileName;
-
-                if (move_uploaded_file($tmpName, $filePath)) {
-                    $relativePath = 'storage/' . $fileName;
-                    
-                    // Сохранение в таблицу pictures
-                    $db = new \app\Core\Database();
-                    $query = "INSERT INTO pictures (road) VALUES (:road)";
-                    $db->query($query, ['road' => $relativePath]);
-                    $pictureIds[] = $db->lastInsertId();
-                }
-            }
-        }
-    }
-
-    if (empty($pictureIds)) {
-        $_SESSION['error'] = "Необходимо загрузить хотя бы одно изображение";
-        header('Location: admin/create_rooms');
-        exit();
-    }
-
-    // Подготовка данных комнаты
-    $data = [
-        'type' => $_POST['type'],
-        'peoples' => $_POST['peoples'],
-        'rooms' => $_POST['rooms'],
-        'bed' => $_POST['bed'],
-        'price' => $_POST['price'],
-        'description' => $_POST['description'],
-        'id_pictures' => $pictureIds[0], // Используем первое изображение как основное
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-
-    // Сохранение в базу данных
-    $db = new \app\Core\Database();
-    $query = "INSERT INTO rooms (type, peoples, rooms, bed, price, description, id_pictures, created_at, updated_at) 
-              VALUES (:type, :peoples, :rooms, :bed, :price, :description, :id_pictures, :created_at, :updated_at)";
-    
-    if ($db->query($query, $data)) {
-        $_SESSION['success'] = "Комната успешно создана";
-        header('Location: admin/create_rooms');
-    } else {
-        $_SESSION['error'] = "Ошибка при создании комнаты";
-        header('Location: admin/create_rooms');
-    }
-    exit();
-}
 }

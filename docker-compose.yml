@@ -10,6 +10,7 @@ services:
     volumes:
        - .:/var/www/html
        - ./public:/var/www/html/public:ro
+       - ./app/public/storage:/var/www/html/public/storage
     depends_on:
       db:
         condition: service_healthy  # Ожидаем готовности БД

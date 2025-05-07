@@ -29,9 +29,10 @@ $router->get('/admin/users/edit', ['app\Controllers\AdminController', 'editUserF
 $router->post('/admin/users/delete', ['app\Controllers\AdminController', 'deleteUser']);
 $router->post('/admin/users/update', ['app\Controllers\AdminController', 'updateUser']); 
 
-$router->get('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoomForm']);
-$router->post('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
-$router->post('/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
+// Маршруты для управления комнатами
+$router->get('/admin/rooms/create', ['app\Controllers\RoomController', 'createRoomForm']);
+$router->post('/admin/rooms', ['app\Controllers\RoomController', 'createRoom']);
+$router->get('/admin/rooms/created/{id}', ['app\Controllers\RoomController', 'viewCreatedRoom']);
 
 // Маршруты для бронирования
 $router->get('/booking', ['app\Controllers\BookingController', 'showForm']);

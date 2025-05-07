@@ -72,11 +72,20 @@
                             </li>
                         <?php endif; ?>
                     </ul>
+                    <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'user'): ?>
                     <ul>
                         <li class="nav-item auth-items" >
                                 <a class="btn btn-primary" href="/booking">Забронировать номер</a>
                         </li>
                     </ul>
+                    <?php endif; ?>
+                    <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
+                    <ul>
+                        <li class="nav-item auth-items" >
+                                <<a href="/admin/rooms/create" class="btn btn-primary">Загрузить номер</a>
+                        </li>
+                    </ul>
+                    <?php endif; ?>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader">
                         <span class="navbar-toggler-icon"></span>
                     </button>

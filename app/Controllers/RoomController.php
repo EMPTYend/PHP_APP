@@ -6,6 +6,7 @@ use app\Core\Database;
 use app\Models\Room;
 use PDO;
 use PDOException;
+use Exception;
 
 class RoomController
 {
@@ -45,46 +46,166 @@ class RoomController
         }
     }
 
+    public function createRoomForm()
+    {
+        // Проверка прав администратора
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+        
+        View::render('admin/create_room', ['title' => 'Create Room']);
+    }
+    
     public function createRoom()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            View::render('rooms/create', ['title' => 'Create Room']);
-            return;
+            return View::render('admin/create_room', ['title' => 'Create Room']);
+        }
+
+        // Валидация CSRF токена
+        if (!$this->validateCsrfToken($_POST['csrf_token'] ?? '')) {
+            return $this->showFormWithError('Invalid CSRF token', $_POST);
         }
 
         try {
-            $data = $this->validateRoomData($_POST);
-            $pictureId = $this->handleFileUpload($_FILES['picture'] ?? null);
+            $data = $this->prepareRoomData($_POST);
+            $errors = $this->validateRoomData($data);
             
-            $db = Database::connect();
-            $db->beginTransaction();
-
-            // Вставляем данные комнаты
-            $query = "INSERT INTO rooms (type, description, id_pictures, price, created_at, updated_at) 
-                     VALUES (:type, :description, :id_pictures, :price, :created_at, :updated_at)";
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                'type' => $data['type'],
-                'description' => $data['description'],
-                'id_pictures' => $pictureId,
-                'price' => $data['price'],
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
-
-            $db->commit();
-            $_SESSION['success'] = 'Комната успешно создана';
-            header('Location: /rooms');
-            exit;
-
-        } catch (\Exception $e) {
-            if (isset($db)) {
-                $db->rollBack();
+            if (!empty($errors)) {
+                return $this->showFormWithErrors($errors, $_POST, $_FILES);
             }
-            $_SESSION['error'] = $e->getMessage();
-            header('Location: /rooms/create');
+
+            $uploadedFiles = $_FILES;
+
+                return Database::transaction(function() use ($data, $uploadedFiles) {
+                    $roomId = Room::create($data);
+                    $uploadedImages = $this->processUploadedImages($uploadedFiles['images'] ?? [], $roomId);
+                    
+                    return View::render('admin/room_created', [
+                        'title' => 'Room Created',
+                        'success' => 'Room created successfully!',
+                        'roomId' => $roomId,
+                        'roomData' => $data,
+                        'uploadedImages' => $uploadedImages
+                    ]);
+                });
+
+        } catch (Exception $e) {
+            return $this->showFormWithError($e->getMessage(), $_POST, $_FILES);
+        }
+    }
+
+    private function redirectWithError(string $url, string $error): void
+    {
+        $_SESSION['error'] = $error;
+        header("Location: $url");
+        exit;
+    }
+
+    private function validateCsrfToken(string $token): bool
+    {
+        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    private function prepareRoomData(array $postData): array
+    {
+        return [
+            'type' => trim($postData['type'] ?? ''),
+            'peoples' => (int)($postData['peoples'] ?? 1),
+            'rooms' => (int)($postData['rooms'] ?? 1),
+            'bed' => trim($postData['bed'] ?? ''),
+            'price' => (float)($postData['price'] ?? 0),
+            'description' => trim($postData['description'] ?? ''),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+    }
+    private function processUploadedImages(array $files, int $roomId): array
+    {
+        $uploadedImages = [];
+        
+        if (!empty($files['tmp_name'])) {
+            foreach ($files['tmp_name'] as $key => $tmpName) {
+                if ($files['error'][$key] === UPLOAD_ERR_OK) {
+                    $image = [
+                        'name' => $files['name'][$key],
+                        'tmp_name' => $tmpName,
+                        'error' => $files['error'][$key]
+                    ];
+                    
+                    if ($path = Room::saveImageAndAssignToRoom($image, $roomId)) {
+                        $uploadedImages[] = $path;
+                    }
+                }
+            }
+        }
+        
+        return $uploadedImages;
+    }
+
+    private function showFormWithError(string $error, array $formData = [], array $files = [])
+    {
+        return View::render('admin/create_room', [
+            'title' => 'Create Room - Error',
+            'error' => $error,
+            'formData' => $formData,
+            'uploadErrors' => $files['images']['error'] ?? []
+        ]);
+    }
+
+    private function showFormWithErrors(array $errors, array $formData = [], array $files = [])
+    {
+        return View::render('admin/create_room', [
+            'title' => 'Create Room - Error',
+            'errors' => $errors,
+            'formData' => $formData,
+            'uploadErrors' => $files['images']['error'] ?? []
+        ]);
+    }
+
+    private function showErrorForm(Exception $e, array $formData, array $uploadErrors)
+    {
+        return View::render('admin/create_room', [
+            'title' => 'Create Room - Error',
+            'error' => $e->getMessage(),
+            'formData' => $formData,
+            'uploadErrors' => $uploadErrors
+        ]);
+    }
+
+    public function viewCreatedRoom($params)
+    {
+        $roomId = $params['id'];
+        $room = Room::findById($roomId);
+        
+        if (!$room) {
+            header('HTTP/1.0 404 Not Found');
             exit;
+        }
+
+        View::render('admin/room_created', [
+            'title' => 'Room #' . $roomId,
+            'roomId' => $roomId,
+            'roomData' => $room,
+            'uploadedImages' => $this->getRoomImages($roomId)
+        ]);
+    }
+
+    private function getRoomImages($roomId): array
+    {
+        try {
+            // Используем метод query из Database класса
+            return Database::query(
+                "SELECT p.path 
+                FROM pictures p
+                JOIN rooms r ON r.id_pictures = p.id_pictures
+                WHERE r.id_room = :room_id",
+                ['room_id' => $roomId]
+            );
+        } catch (Exception $e) {
+            error_log('Error fetching room images: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -104,26 +225,5 @@ class RoomController
         ];
     }
 
-    private function handleFileUpload(?array $file): ?int
-    {
-        if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
-            return null;
-        }
-
-        $uploadDir = __DIR__ . '/../../public/storage/';
-        $fileName = uniqid() . '_' . basename($file['name']);
-        $filePath = $uploadDir . $fileName;
-
-        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
-            throw new \RuntimeException('Ошибка при загрузке файла');
-        }
-
-        $relativePath = 'storage/' . $fileName;
-        $db = Database::connect();
-        
-        $stmt = $db->prepare("INSERT INTO pictures (road) VALUES (:road)");
-        $stmt->execute(['road' => $relativePath]);
-        
-        return $db->lastInsertId();
-    }
+    
 }
