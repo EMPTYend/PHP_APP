@@ -1,5 +1,6 @@
 <div class="container my-4">
     <form class="needs-validation" novalidate="" action="create_rooms" method="post" enctype="multipart/form-data"> 
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
         <div class="row g-3"> 
             <div class="col-sm-6"> 
                 <label for="type" class="form-label">Type</label> 

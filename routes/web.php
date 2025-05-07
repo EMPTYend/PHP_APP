@@ -30,4 +30,4 @@ $router->post('/admin/users/delete', ['app\Controllers\AdminController', 'delete
 $router->post('/admin/users/update', ['app\Controllers\AdminController', 'updateUser']); 
 
 $router->get('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoomForm']);
-$router->post('/admin/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
+$router->post('/create_rooms', ['app\Controllers\AdminController', 'createRoom']);
